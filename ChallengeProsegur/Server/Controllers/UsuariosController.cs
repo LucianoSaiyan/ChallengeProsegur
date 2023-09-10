@@ -2,14 +2,10 @@ using ChallengeProsegur.Application.Abstractions;
 using ChallengeProsegur.Entities.Model;
 using ChallengeProsegur.Shared;
 using ChallengeProsegur.Shared.Domain;
-using ChallengeProsegur.Shared.DTOs;
 using ChallengeProsegur.Shared.Helpers;
 using ChallengeProsegur.Shared.Mappers;
 using ChallengeProsegur.Shared.Validations;
-using Microsoft.AspNetCore.Authorization;
-//using ChallengeProsegur.Shared;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Validations.Rules;
 
 namespace ChallengeProsegur.Server.Controllers
 {
@@ -110,15 +106,14 @@ namespace ChallengeProsegur.Server.Controllers
                 //invocacion de Get by id de Users
                 responseService.Data = await _users.GetByIdAsync(id);
                 responseService.Message = "";
-                responseService.HttpResponseMessage.StatusCode = System.Net.HttpStatusCode.OK;
                 if (responseService.Data != null)
                 {
-                    responseService.HttpResponseMessage.StatusCode = System.Net.HttpStatusCode.NotFound;
+                    responseService.HttpResponseMessage.StatusCode = System.Net.HttpStatusCode.OK;
                     return Ok(responseService);
                 }
                 else
-                {
-                    responseService.HttpResponseMessage.StatusCode = System.Net.HttpStatusCode.InternalServerError;
+                { 
+                    responseService.HttpResponseMessage.StatusCode = System.Net.HttpStatusCode.NotFound;
                     return NotFound(responseService);
                 }
             }
@@ -253,7 +248,6 @@ namespace ChallengeProsegur.Server.Controllers
             }
         }
 
-        //[Authorize("DeletePolicy")]
         [HttpDelete("id")]
         public async Task<IActionResult> Delete(int id)
         {

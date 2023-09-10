@@ -1,10 +1,5 @@
-using ChallengeProsegur.Entities.Model;
-using ChallengeProsegur.Shared;
-using ChallengeProsegur.Shared.Helpers;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using System.Reflection;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace ChallengeProsegur.Test
 {

@@ -1,0 +1,12 @@
+1 Instalar SDK Net Core 7
+https://dotnet.microsoft.com/es-es/download/dotnet/7.0
+2 - Publicar base de datos de la carpeta DataBase
+o correr script en motor sql server
+3 - URL Configurada de la API 
+https://localhost:44330/api  //controller UsuariosController
+Cambiar cadena de conexion en appsettings.Development.json del proyecto ChallengeProsegur.Server
+4 - Client https://localhost:7088/
+el mismo esta configurado para que el componente que levante primero invoque al get de la api
+
+
+

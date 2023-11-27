@@ -1,0 +1,193 @@
+﻿@page "/customer"
+@using Project.Entities.Model;
+@using Project.Shared
+@using Project.Shared.DTOs;
+@using Project.Shared.Domain;
+@using System.Diagnostics;
+@using System.Text.Json.Serialization;
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject ApiSettings apisettings
+
+
+
+<div class="container">
+
+    &nbsp;&nbsp;
+
+    <button class="btn btn-dark" @onclick="() => CreateNewCustomer()"> 
+        Crear Cliente Nuevo
+    </button>
+
+    @if (CreateCustomer)
+    {
+        <CustomerFormComponent Customer="@CustomerModelDTOResponse" EventCall="create"></CustomerFormComponent>
+        <div>&nbsp; &nbsp;</div>
+        <button class="btn btn-danger"
+        @onclick="() => CreateNewCustomer()">
+            Volver al Listado de Clientes
+        </button>
+    }
+    else
+    {
+        @if (ShowInformation)
+        {
+            @if (CustomerModelDTOArrayResponse == null)
+            {
+                <p><em>@MessageList</em></p>
+            }
+            else if (CustomerModelDTOArrayResponse.Length == 0)
+            {
+                <p><em>@MessageList</em></p>
+            }
+            else
+            {
+                <div class="col-10">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                @* propiedades que se cargan del metodo Methods.GetProperties_from_Generic_Object_Exclude_id_Async *@
+                                @for (int i = 0; i < propertyInfos.Length; i++)
+                                {
+                                    <th>@propertyInfos[i].Name</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var customer in CustomerModelDTOArrayResponse)
+                            {
+                                <tr>
+                                    <td>
+                                        <button class="btn btn-info"
+                                        @onclick="() => EventUpdateorDelete(customer)">
+                                            Cliente @customer.Id
+                                        </button>
+                                    </td>
+
+                                    @* <td>@customer.Id</td> *@
+                                    <td>@customer.Name</td>
+                                    <td>@customer.Surname</td>
+                                    <td>@customer.BirthDate</td>
+                                    <td>@customer.CUIT</td>
+                                    <td>@customer.Address</td>
+                                    <td>@customer.Phone</td>
+                                    <td>@customer.Email</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+        else
+        {
+            <CustomerFormComponent Customer="@CustomerModelDTOResponse" EventCall="update"></CustomerFormComponent>
+            <div>&nbsp; &nbsp;</div>
+
+            <button class="btn btn-danger"
+            @onclick="() => SetValueButton()">
+                Volver al Listado de Clientes
+            </button>
+
+
+        }
+    }
+    @if (Error != null)
+    {
+        <p><em>@Error</em></p>
+    }
+</div>
+
+
+
+@code
+{
+
+    #region Mostrar/Ocultar informacion
+    private bool ShowInformation { get; set; } = true;
+    private bool CreateCustomer { get; set; } = false;
+    //propiedad que se utiliza para mostrar el boton de actualizar el servicio
+    private bool EnableButtonGetDataCity { get; set; } = false;
+    #endregion
+    CustomerDTO[]? CustomerModelDTOArrayResponse;
+    //CustomerDTO[]? OpenWeatherModelDTOArrayResponse;
+    CustomerDTO? CustomerModelDTOResponse = new CustomerDTO();
+    private string Error { get; set; }
+    private PropertyInfo[] propertyInfos { get; set; }
+    public string MessageList { get; set; }
+
+    #region Metodos Carga de Pagina
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            //se obtienen las propiedades del modelo para encabezado de la lista
+            propertyInfos = await Methods.GetProperties_from_Generic_Object_Exclude_id_Async<CustomerDTO>(new CustomerDTO());
+            CustomerModelDTOArrayResponse = await GetWeatherApiAsync();
+
+        }
+        catch (Exception ex)
+        {
+            Error = ex.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Invoca el Get del Server
+    /// </summary>
+    /// <param name="repeatcall"></param>
+    /// <returns></returns>
+    async Task<CustomerDTO[]> GetWeatherApiAsync(object repeatcall = null)
+    {
+        try
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            //valida que haya una seleccion valida en el dropdown de ciudades
+            // if (!String.IsNullOrEmpty(Citie_Selected?.city))
+            // {
+            //UpdatedInformacion = $"Aguarde por favor,buscando Historicos de la Ciudad {Citie_Selected.city}";
+            //string[] splitedCiudadPais = splitcountry(Citie_Selected.city);
+            string urllost = $"{LocalApiUrl()}";
+            //invocacion a la api Local
+            string responseService = await Http.GetStringAsync(urllost);
+
+            stopwatch.Stop();
+            Error = $"TotalSeconds : {stopwatch.Elapsed.TotalSeconds} --- TotalMilliseconds : {stopwatch.Elapsed.TotalMilliseconds}";
+            return JsonConvert.DeserializeObject<ResponseService<CustomerDTO[]>>(responseService).Data;
+        }
+        catch (Exception ex)
+        {
+            Error = ex.ToString();
+            return CustomerModelDTOArrayResponse;
+        }
+    }
+
+    string LocalApiUrl()
+        => $"{apisettings.BackEndApiUrl}Customer";
+
+    async Task EventUpdateorDelete(CustomerDTO customer)
+    {
+        if (customer != null)
+        {
+            ShowInformation = false;
+            CustomerModelDTOResponse = customer;
+        }
+    }
+
+    async Task SetValueButton()
+    {
+        ShowInformation = true;
+    }
+
+
+    async Task CreateNewCustomer()
+    {
+        CreateCustomer = !CreateCustomer;
+    }
+
+
+    #endregion
+
+}

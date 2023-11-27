@@ -1,0 +1,217 @@
+﻿@using Project.Shared.DTOs;
+
+<div class="jumbotron col-12">
+    <h3>Cliente</h3>
+    <EditForm Model="@Customer" OnValidSubmit="ChangeValue">
+        @* OnValidSubmit="@OnValidSubmit" *@
+        <DataAnnotationsValidator />
+        <table class="table-responsive-md col-sm-12">
+            <tr class="col-sm-5">
+                <td><i>Id de Cliente</i></td>
+                <td>
+                    <input type="text" disabled="disabled" class="form-control-sm" placeholder="@nameof(Customer.Id)"
+                    @bind-value="@Customer.Id" />
+                </td>
+                @* <td><i><ValidationMessage For="@(()=> Customer.Name)"></ValidationMessage></i></td> *@
+            </tr>
+            <tr class="col-sm-5">
+                <td><i>Nombre</i></td>
+                <td>
+                    <input type="text" class="form-control-sm" placeholder="@nameof(Customer.Name)"
+                    @bind-value="@Customer.Name" />
+                </td>
+                <td><i><ValidationMessage For="@(()=> Customer.Name)"></ValidationMessage></i></td>
+            </tr>
+            <tr class="col-sm-5">
+                <td><i>Apellido</i></td>
+                <td>
+                    <input type="text" class="form-control-sm" placeholder="@nameof(Customer.Surname)"
+                    @bind-value="@Customer.Surname" />
+                </td>
+                <td><i><ValidationMessage For="@(()=> Customer.Surname)"></ValidationMessage></i></td>
+            </tr>
+            <tr class="col-sm-5">
+                <td><i>Fecha Nacimiento</i></td>
+                <td>
+                    <input type="text" class="form-control-sm" placeholder="@nameof(Customer.BirthDate)"
+                    @bind-value="@Customer.BirthDate" />
+                </td>
+                <td><i><ValidationMessage For="@(()=> Customer.BirthDate)"></ValidationMessage></i></td>
+            </tr>
+            <tr class="col-sm-5">
+                <td><i>CUIT</i></td>
+                <td>
+                    <input type="text" class="form-control-sm" placeholder="@nameof(Customer.CUIT)"
+                    @bind-value="@Customer.CUIT" />
+                </td>
+                <td><i><ValidationMessage For="@(()=> Customer.CUIT)"></ValidationMessage></i></td>
+            </tr>
+            <tr class="col-sm-5">
+                <td><i>Direccion</i></td>
+                <td>
+                    <input type="text" class="form-control-sm" placeholder="@nameof(Customer.Address)"
+                    @bind-value="@Customer.Address" />
+                </td>
+                <td><i><ValidationMessage For="@(()=> Customer.Address)"></ValidationMessage></i></td>
+            </tr>
+            <tr class="col-sm-5">
+                <td><i>Telefono</i></td>
+                <td>
+                    <input type="text" class="form-control-sm" placeholder="@nameof(Customer.Phone)"
+                    @bind-value="@Customer.Phone" />
+                </td>
+                <td><i><ValidationMessage For="@(()=> Customer.Phone)"></ValidationMessage></i></td>
+            </tr>
+            <tr class="col-sm-5">
+                <td><i>EMail</i></td>
+                <td>
+                    <input type="text" class="form-control-sm" placeholder="@nameof(Customer.Email)"
+                    @bind-value="@Customer.Email" />
+                </td>
+                <td><i><ValidationMessage For="@(()=> Customer.Email)"></ValidationMessage></i></td>
+            </tr>
+            @* @if (EventCall == "update" || EventCall == "delete")
+            {
+                <tr class="col-sm-7">
+                    <td><i>Desea Editar y/o Eliminar al cliente</i></td>
+                    <td>
+                        <InputRadioGroup @bind-Value="operation">
+                            @foreach (var option in rdOptions)
+                            {
+                                <InputRadio Value="option" /> @option <br />
+                            }
+                        </InputRadioGroup>
+                    </td>
+                </tr>
+             *@}
+            <tr class="col-sm-7">
+
+                @* <div>
+                    <button class="btn btn-danger" type="submit">@operation</button>
+                </div> *@
+                @if (EventCall != "delete")
+                {
+                    <button type="submit" class="btn btn-warning">@operation Customer @Customer.Id</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-danger" @onclick="HandleDelete">@operation Customer @Customer.Id</button>
+                }
+                
+
+                
+            </tr>
+
+        </table>
+        <p>@operation</p>
+
+    </EditForm>
+
+    <br /> <br />
+
+    <p>@message</p>
+
+</div>
+
+
+@code {
+
+    [Parameter] public CustomerDTO Customer { get; set; }
+    [Parameter] public string EventCall { get; set; }
+    // [Parameter] public EventCallback OnValidSubmit { get; set; }
+    private string operation { get; set; }
+    private string message { get; set; }
+    protected async override Task OnParametersSetAsync()
+    {
+        //customer = new CustomerDTO();
+        //var oiu = Customer;
+        operation = EventCall;
+    }
+
+    async Task ChangeValue()
+    {
+        string urllost = $"{LocalApiUrl()}";
+        if (EventCall.Equals("create"))
+        {
+            var create = Create<CustomerDTO>(Customer);
+        }
+        if (EventCall.Equals("update"))
+        {
+
+            //invocacion a la api Local
+            var rr = Update<CustomerDTO>(Customer);
+            //string responseService = await Http.GetStringAsync(urllost);
+        }
+       
+    }
+    List<string> rdOptions = new List<string> { "Update", "Delete" };
+    string LocalApiUrl()
+        => $"{apisettings.BackEndApiUrl}Customer";
+
+
+    void DecodeResponse(string responseService)
+    {
+
+        var ro = JsonConvert.DeserializeObject<ResponseService<CustomerDTO[]>>(responseService).Data;
+    }
+
+    public async Task<int> Update<T>(T entity)
+    {
+        try
+        {
+            var response = (await Http.PutAsJsonAsync<T>(LocalApiUrl(), entity));
+            var o = (response.StatusCode == System.Net.HttpStatusCode.OK ? 1 : 0);
+            message = o >= 1 ? "EL REGISTRO FUE EDITADO CORRECTAMENTE" : response.Content.ReadAsStringAsync().Exception.Message;
+            return o;
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+    }
+
+    public ResponseService<CustomerDTO> responseServiceObj = new ResponseService<CustomerDTO>();
+    public async Task<CustomerDTO> Create<T>(T entity)
+    {
+        try
+        {
+            var response = (await Http.PostAsJsonAsync<T>(LocalApiUrl(), entity));
+            var rri = await response.Content.ReadAsStringAsync();
+            var resp = JsonConvert.DeserializeObject<ResponseService<CustomerDTO>>(rri).Data;
+            //return (response.StatusCode == System.Net.HttpStatusCode.OK ? 1 : 0);
+            var o = (response.StatusCode == System.Net.HttpStatusCode.OK ? 1 : 0);
+            message = o >= 1 ? "EL REGISTRO FUE CREADO CORRECTAMENTE" : response.Content.ReadAsStringAsync().Exception.Message;
+            return resp;
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+    }
+
+    private void HandleDelete()
+    {
+        // Desactivar temporalmente la validación
+        var editContext = new EditContext(Customer);
+        editContext.Validate(); // Esto desactivará temporalmente la validación
+        var rr = Delete<CustomerDTO>(Customer.Id, Customer);
+        // Lógica para manejar la eliminación del cliente
+        // Aquí puedes realizar la operación de eliminación sin preocuparte por las validaciones
+    }
+
+    public async Task<int> Delete<T>(int id, T entity)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync(LocalApiUrl() + $"/{id}");
+            var o = (response.StatusCode == System.Net.HttpStatusCode.OK ? 1 : 0);
+            message = o >= 1 ? "EL REGISTRO FUE ELIMINADO CORRECTAMENTE" : response.Content.ReadAsStringAsync().Exception.Message;
+            return o;
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+    }
+
+}
